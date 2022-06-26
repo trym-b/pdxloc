@@ -1,0 +1,141 @@
+name: "Main"
+on: ["push"]
+env:
+    build_lint_and_format_python_version: "3.10"
+jobs:
+    create-source-distribution:
+        name: "Create source distribution"
+        runs-on: ubuntu-22.04
+        steps:
+            - name: "Check out repository code"
+              uses: actions/checkout@v3
+            - name: "Set up Python ${{ env.build_lint_and_format_python_version}}"
+              uses: actions/setup-python@v4
+              with:
+                  python-version: ${{ env.build_lint_and_format_python_version}}
+            - name: "Install build requirements"
+              run: "pip install --requirement requirements/build.txt"
+            - name: "Create source distribution"
+              run: "python -m build --sdist"
+            - name: "Upload artifact"
+              uses: actions/upload-artifact@v3
+              with:
+                  name: source-distribution
+                  path: dist/pdxloc*.tar.gz
+                  retention-days: 1
+    run-tests-ubuntu-22-04:
+        name: "Run tests on ubuntu-22.04"
+        runs-on: ubuntu-22.04
+        needs: ["create-source-distribution"]
+        strategy:
+            matrix:
+                python-version: ["3.9", "3.10"]
+        steps:
+            - name: "Check out repository code"
+              uses: actions/checkout@v3
+            - name: "Download artifact"
+              uses: actions/download-artifact@v3
+              with:
+                  name: source-distribution
+                  path: dist
+            - name: "Set up Python ${{ matrix.python-version }}"
+              uses: actions/setup-python@v4
+              with:
+                  python-version: ${{ matrix.python-version }}
+            - name: "Install source distribution"
+              run: "pip install dist/*.tar.gz"
+            - name: "Install test requirements"
+              run: "pip install --requirement requirements/test.txt"
+            - name: "Run test"
+              run: "pytest tests/"
+    run-samples-ubuntu-22-04:
+        name: "Test sample on ubuntu-22.04"
+        runs-on: ubuntu-22.04
+        needs: ["create-source-distribution"]
+        strategy:
+            matrix:
+                python-version: ["3.9", "3.10"]
+        steps:
+            - name: "Check out repository code"
+              uses: actions/checkout@v3
+            - name: "Download artifact"
+              uses: actions/download-artifact@v3
+              with:
+                  name: source-distribution
+                  path: dist
+            - name: "Set up Python ${{ matrix.python-version }}"
+              uses: actions/setup-python@v4
+              with:
+                  python-version: ${{ matrix.python-version }}
+            - name: "Install source distribution"
+              run: "pip install dist/*.tar.gz"
+            - name: "Run sample"
+              run: "python samples/read_modify_write.py"
+    check-formatting:
+        name: "Lint"
+        runs-on: ubuntu-22.04
+        needs: ["create-source-distribution"]
+        strategy:
+            matrix:
+                formatter:
+                    - black
+                    - isort
+        steps:
+            - name: "Check out repository code"
+              uses: actions/checkout@v3
+            - name: "Set up Python ${{ env.build_lint_and_format_python_version}}"
+              uses: actions/setup-python@v4
+              with:
+                  python-version: ${{ env.build_lint_and_format_python_version}}
+            - name: "Install formatting requirements"
+              run: "pip install --requirement requirements/format.txt"
+            - name: "Run ${{ matrix.formatter }}"
+              run: "${{ matrix.formatter }} --check ${{ github.workspace }}"
+    pylint:
+        name: "Lint with pylint"
+        runs-on: ubuntu-22.04
+        needs: ["create-source-distribution"]
+        steps:
+            - name: "Check out repository code"
+              uses: actions/checkout@v3
+            - name: "Download artifact"
+              uses: actions/download-artifact@v3
+              with:
+                  name: source-distribution
+                  path: dist
+            - name: "Set up Python ${{ env.build_lint_and_format_python_version}}"
+              uses: actions/setup-python@v4
+              with:
+                  python-version: ${{ env.build_lint_and_format_python_version}}
+            - name: "Install source distribution"
+              run: "pip install dist/*.tar.gz"
+            - name: "Install linting requirements"
+              run: "pip install --requirement requirements/lint.txt"
+            - name: "Run pylint on source"
+              run: "pylint src"
+            - name: "Run pylint on tests"
+              run: "pylint tests/"
+            - name: "Run pylint on samples"
+              run: "pylint samples/"
+    mypy:
+        name: "Lint with mypy"
+        runs-on: ubuntu-22.04
+        needs: ["create-source-distribution"]
+        steps:
+            - name: "Check out repository code"
+              uses: actions/checkout@v3
+            - name: "Download artifact"
+              uses: actions/download-artifact@v3
+              with:
+                  name: source-distribution
+                  path: dist
+            - name: "Set up Python ${{ env.build_lint_and_format_python_version}}"
+              uses: actions/setup-python@v4
+              with:
+                  python-version: ${{ env.build_lint_and_format_python_version}}
+            - name: "Install source distribution"
+              run: "pip install dist/*.tar.gz"
+            - name: "Install linting requirements"
+              run: "pip install --requirement requirements/lint.txt"
+            - name: "Run mypy"
+              run: "mypy ${{ github.workspace }}"

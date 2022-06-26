@@ -1,0 +1,46 @@
+[project]
+name = "pdxloc"
+version = "0.0.1"
+license = {text = "Apache License 2.0"}
+readme = "README.md"
+authors = [
+  { name="Trym Bremnes", email="trym.bremnes@gmail.com" },
+]
+description = "An unoffical localization library for Paradox games"
+requires-python = ">=3.9"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "ruamel.yaml>=0.17.21, <1",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/trym-b/pdxloc"
+"Bug Tracker" = "https://github.com/trym-b/pdxloc/issues"
+
+[project.optional-dependencies]
+test = [
+    "pytest>=7.1.2, <8",
+]
+
+[build-system]
+requires = ["setuptools>=62"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.package-dir]
+"" = "src"
+
+[tool.setuptools.package-data]
+"pdxloc" = ["py.typed"]
+
+[tool.isort]
+profile = "black"
+
+[tool.pytest.ini_options]
+addopts = "--exitfirst"
+
+[tool.pylint.'MESSAGES CONTROL']
+max-line-length = 120
