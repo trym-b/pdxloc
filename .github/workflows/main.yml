@@ -1,7 +1,7 @@
 name: "Main"
 on: ["push"]
 env:
-    build_lint_and_format_python_version: "3.10"
+    build_lint_and_format_python_version: "3.12"
 jobs:
     create-source-distribution:
         name: "Create source distribution"
@@ -29,7 +29,7 @@ jobs:
         needs: ["create-source-distribution"]
         strategy:
             matrix:
-                python-version: ["3.9", "3.10"]
+                python-version: ["3.9", "3.10", "3.11", "3.12"]
         steps:
             - name: "Check out repository code"
               uses: actions/checkout@v3
@@ -54,7 +54,7 @@ jobs:
         needs: ["create-source-distribution"]
         strategy:
             matrix:
-                python-version: ["3.9", "3.10"]
+                python-version: ["3.9", "3.10", "3.11", "3.12"]
         steps:
             - name: "Check out repository code"
               uses: actions/checkout@v3
